@@ -1,0 +1,489 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>AQI</title>
+    <!-- 引入echarts.js -->
+    <script src="https://cdn.bootcss.com/echarts/3.8.5/echarts.min.js"></script>
+
+    <!-- jquery -->
+    <script src="http://cdn.static.runoob.com/libs/jquery/1.10.2/jquery.min.js"></script>
+
+
+    <script src="china.js"></script>
+
+    <link href="css/main.css" rel="stylesheet" type="text/css">
+
+</head>
+
+
+<body>
+    <div id="map" style='height:400px;'></div>
+    <div id="pollution" style='height:300px; padding:16px 0px'></div>
+
+    <script type="text/javascript">
+        var mapChart = echarts.init(document.getElementById('map'));
+        var pollutionChart = echarts.init(document.getElementById('pollution'));
+
+        $.ajaxSetup({
+            async: false
+        });
+
+        var aqi;
+        $.get("Data/aqi.json", function (jsonData) {
+            aqi = jsonData;
+        });
+
+        var month;
+        $.get("Data/month.json", function (jsonData) {
+            month = jsonData;
+        });
+
+        var date;
+        $.get("Data/date.json", function (jsonData) {
+            date = jsonData;
+        });
+
+        var geoCoordMap = {
+            '北京': [116.46, 39.92],
+            '天津': [117.2, 39.13],
+            '石家庄': [114.48, 38.03],
+            '唐山': [118.02, 39.63],
+            '秦皇岛': [119.57, 39.95],
+            '邯郸': [114.47, 36.6],
+            '保定': [115.48, 38.85],
+            '张家口': [114.87, 40.82],
+            '承德': [117.93, 40.97],
+            '廊坊': [116.7, 39.53],
+            '沧州': [116.83, 38.33],
+            '衡水': [115.72, 37.72],
+            '邢台': [114.48, 37.05],
+            '太原': [112.53, 37.87],
+            '呼和浩特': [111.65, 40.82],
+            '沈阳': [123.38, 41.8],
+            '大连': [121.62, 38.92],
+            '长春': [125.35, 43.88],
+            '哈尔滨': [126.63, 45.75],
+            '上海': [121.48, 31.22],
+            '南京': [118.78, 32.04],
+            '苏州': [120.62, 31.32],
+            '南通': [121.05, 32.08],
+            '连云港': [119.16, 34.59],
+            '徐州': [117.2, 34.26],
+            '扬州': [119.42, 32.39],
+            '无锡': [120.29, 31.59],
+            '常州': [119.95, 31.79],
+            '镇江': [119.44, 32.2],
+            '泰州': [119.9, 32.49],
+            '淮安': [119.15, 33.5],
+            '盐城': [120.13, 33.38],
+            '宿迁': [118.3, 33.96],
+            '杭州': [120.19, 30.26],
+            '宁波': [121.56, 29.86],
+            '温州': [120.65, 28.01],
+            '绍兴': [120.58, 30.01],
+            '湖州': [120.1, 30.86],
+            '嘉兴': [120.76, 30.77],
+            '台州': [121.420757, 28.656386],
+            '舟山': [122.207216, 29.985295],
+            '金华': [119.64, 29.12],
+            '衢州': [118.88, 28.97],
+            '丽水': [119.92, 28.45],
+            '合肥': [117.27, 31.86],
+            '福州': [119.3, 26.08],
+            '厦门': [118.1, 24.46],
+            '南昌': [115.89, 28.68],
+            '济南': [117, 36.65],
+            '青岛': [120.33, 36.07],
+            '郑州': [113.65, 34.76],
+            '武汉': [114.31, 30.52],
+            '长沙': [113, 28.21],
+            '广州': [113.23, 23.16],
+            '深圳': [114.07, 22.62],
+            '珠海': [113.52, 22.3],
+            '佛山': [113.11, 23.05],
+            '中山': [113.38, 22.52],
+            '江门': [113.06, 22.61],
+            '东莞': [113.75, 23.04],
+            '惠州': [114.4, 23.09],
+            '肇庆': [112.44, 23.05],
+            '南宁': [108.33, 22.84],
+            '海口': [110.35, 20.02],
+            '重庆': [106.54, 29.59],
+            '成都': [104.06, 30.67],
+            '贵阳': [106.71, 26.57],
+            '昆明': [102.73, 25.04],
+            '深圳': [114.07, 22.62],
+            '西安': [108.95, 34.27],
+            '兰州': [103.73, 36.03],
+            '西宁': [101.74, 36.56],
+            '银川': [106.27, 38.47],
+            '乌鲁木齐': [87.68, 43.77],
+            '湘潭': [112.91, 27.87],
+            '株洲': [113.16, 27.83],
+            '包头': [110, 40.58],
+            '鄂尔多斯': [109.781327, 39.608266],
+            '营口': [122.18, 40.65],
+            '盘锦': [122.070714, 41.119997],
+            '泉州': [118.58, 24.93],
+            '莱芜': [117.67, 36.19],
+            '临沂': [118.35, 35.05],
+            '德州': [116.29, 37.45],
+            '聊城': [115.97, 36.45],
+            '滨州': [118.03, 37.36],
+            '淄博': [118.05, 36.78],
+            '枣庄': [117.57, 34.86],
+            '烟台': [121.39, 37.52],
+            '潍坊': [119.1, 36.62],
+            '济宁': [116.59, 35.38],
+            '泰安': [117.13, 36.18],
+            '日照': [119.46, 35.42],
+            '威海': [122.1, 37.5],
+            '东营': [118.49, 37.46],
+            '韶关': [113.62, 24.84],
+            '汕头': [116.69, 23.39],
+            '湛江': [110.359377, 21.270708],
+            '茂名': [110.88, 21.68],
+            '梅州': [116.1, 24.55],
+            '汕尾': [115.375279, 22.786211],
+            '阳江': [111.95, 21.85],
+            '清远': [113.01, 23.7],
+            '潮州': [116.63, 23.68]
+        };
+
+        var convertData = function (data) {
+            var res = [];
+            for (var i = 0; i < data.length; i++) {
+                var geoCoord = geoCoordMap[data[i].name];
+                if (geoCoord) {
+                    res.push({
+                        name: data[i].name,
+                        value: geoCoord.concat(data[i].value)
+                    });
+                }
+            }
+            return res;
+        };
+
+        var convertPollutionData = function (data) {
+            var res = [];
+            for (var i = 1; i < data.length; i++) {
+                res.push(data[i])
+            }
+            res[5] = data[0];
+            data[0].data = data[0].data.map(function (item) {
+                return item * 1000;
+            })
+            return res;
+        };
+
+        var mapOption = {
+            baseOption: {
+                backgroundColor: '#222222',
+                timeline: {
+                    axisType: 'category',
+                    orient: 'vertical',
+                    autoPlay: true,
+                    inverse: true,
+                    playInterval: 1000,
+                    left: null,
+                    right: 20,
+                    top: 20,
+                    bottom: 20,
+                    width: 70,
+                    height: null,
+                    label: {
+                        normal: {
+                            textStyle: {
+                                color: '#999'
+                            }
+                        },
+                        emphasis: {
+                            textStyle: {
+                                color: '#fff'
+                            }
+                        }
+                    },
+                    symbol: 'none',
+                    lineStyle: {
+                        color: '#555'
+                    },
+                    checkpointStyle: {
+                        color: '#bbb',
+                        borderColor: '#777',
+                        borderWidth: 2
+                    },
+                    controlStyle: {
+                        showNextBtn: false,
+                        showPrevBtn: false,
+                        normal: {
+                            color: '#666',
+                            borderColor: '#666'
+                        },
+                        emphasis: {
+                            color: '#aaa',
+                            borderColor: '#aaa'
+                        }
+                    },
+                    data: []
+                },
+                title: {
+                    text: 'AQI变化',
+                    subtext: '以月份为单位（2015年1月至2017年11月）',
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (params) {
+                        return params.name + ' : ' + params.value[2];
+                    }
+                },
+                legend: {
+                    orient: 'vertical',
+                    y: 'bottom',
+                    x: 'right',
+                    data: ['AQI'],
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                visualMap: {
+                    min: 0,
+                    max: 250,
+                    calculable: true,
+                    inRange: {
+                        color: ['#50a3ba', '#eac736', '#d94e5d']
+                    },
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                geo: {
+                    map: 'china',
+                    zoom: 1.8,
+                    roam: true,
+                    label: {
+                        emphasis: {
+                            show: false
+                        }
+                    },
+                    itemStyle: {
+                        normal: {
+                            areaColor: '#222222',
+                            borderColor: '#aaa'
+                        },
+                        emphasis: {
+                            areaColor: '#2a333d'
+                        }
+                    }
+                },
+                series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'geo',
+                        data: convertData(aqi[0]),
+                        symbolSize: 12,
+                        itemStyle: {
+                            emphasis: {
+                                borderColor: '#fff',
+                                borderWidth: 1
+                            }
+                        }
+                    }
+                ]
+            },
+            options: []
+        };
+
+        // 时间线内容变动
+        for (var n = 0; n < month.length; n++) {
+            mapOption.baseOption.timeline.data.push(month[n]);
+            mapOption.options.push({
+                title: {
+                    text: 'AQI变化',
+                    subtext: '以月份为单位（2015年1月至2017年11月）',
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                series: {
+                    type: 'scatter',
+                    coordinateSystem: 'geo',
+                    data: convertData(aqi[n]),
+                    symbolSize: 12,
+                    itemStyle: {
+                        emphasis: {
+                            borderColor: '#fff',
+                            borderWidth: 1
+                        }
+                    }
+                }
+            });
+        }
+
+        mapChart.setOption(mapOption);
+
+        mapChart.on('click', function (params) {
+            if (params.componentType === 'series') {
+                //alert(params.name);
+                place = params.name;
+                $.get("Data/city/FinalData_" + place + ".json", function (jsonData) {
+                    option = {
+                        title: {
+                            text: '空气主要成份浓度（' + place + '）',
+                            textStyle: {
+                                color: '#fff'
+                            }
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'cross',
+                                label: {
+                                    backgroundColor: '#aaa'
+                                }
+                            }
+                        },
+                        legend: {
+                            data: ['SO2', 'NO2', 'PM2.5', 'O3', 'PM10', 'CO'],
+                            textStyle: {
+                                color: '#bbb'
+                            },
+                            inactiveColor: "#555",
+                            selected: {
+                                'CO': false
+                            }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: 20,
+                            top: 60,
+                            containLabel: true,
+                        },
+                        xAxis: [
+                            {
+                                type: 'category',
+                                boundaryGap: false,
+                                data: date,
+                                axisLine: {
+                                    lineStyle: {
+                                        color: '#ccc'
+                                    }
+                                },
+                                        }
+                                    ],
+                        yAxis: [
+                            {
+                                name: '24h浓度均值(μg/m^3)',
+                                type: 'value',
+                                axisLine: {
+                                    lineStyle: {
+                                        color: '#ccc'
+                                    }
+                                },
+                                        }
+                                    ],
+                        dataZoom: [
+                            {
+                                startValue: '2017-11-1',
+                                height: 15,
+                                bottom: 0,
+                                borderColor: "#888",
+                                textStyle: {
+                                    color: '#aaa'
+                                }
+                                        },
+                            {
+                                type: 'inside',
+                                        }
+                                    ],
+                        series: convertPollutionData(jsonData)
+                    };
+                    pollutionChart.setOption(option);
+                });
+            }
+        });
+
+        //堆积图
+        var beijing;
+        $.get("Data/city/FinalData_北京.json", function (jsonData) {
+            beijing = jsonData;
+        });
+
+        option = {
+            title: {
+                text: '空气主要成份浓度（北京）',
+                textStyle: {
+                    color: '#fff'
+                }
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#aaa'
+                    }
+                }
+            },
+            legend: {
+                data: ['SO2', 'NO2', 'PM2.5', 'O3', 'PM10', 'CO'],
+                textStyle: {
+                    color: '#bbb'
+                },
+                inactiveColor: "#555",
+                selected: {
+                    'CO': false
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: 20,
+                top: 60,
+                containLabel: true,
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: date,
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ccc'
+                        }
+                    },
+        }
+    ],
+            yAxis: [
+                {
+                    name: '24h浓度均值(μg/m^3)',
+                    type: 'value',
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ccc'
+                        }
+                    },
+        }
+    ],
+            dataZoom: [
+                {
+                    startValue: '2017-11-1',
+                    height: 15,
+                    bottom: 0,
+                    borderColor: "#888",
+                    textStyle: {
+                        color: '#aaa'
+                    }
+                },
+                {
+                    type: 'inside',
+                }
+            ],
+            series: convertPollutionData(beijing)
+        };
+        pollutionChart.setOption(option);
+    </script>
+</body>
